@@ -6,7 +6,10 @@
 import datetime
 import hashlib
 import json
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
+import requests
+from uuid import uuid4
+from urllib.parse import urlparse
 
 # Part 1 - Building a Blockchain
 
@@ -14,6 +17,7 @@ class Blockchain:
 
   def __init__(self):
     self.chain = []
+    self.transactions = []
     self.create_block(proof = 1, previous_hash = '0')
 
   def create_block(self, proof, previous_hash):
@@ -21,9 +25,10 @@ class Blockchain:
       'index': len(self.chain) + 1,
       'timestamp': str(datetime.datetime.now()),
       'proof': proof,
-      'previous_hash': previous_hash
+      'previous_hash': previous_hash,
+      'transactions': self.transactions
     }
-
+    self.transactions = []
     self.chain.append(block)
     return block
 
@@ -60,6 +65,15 @@ class Blockchain:
       previous_block = block
       block_index += 1
     return True
+
+  def add_transaction(self, sender, receiver, amount):
+    self.transactions.append({
+      'sender': sender,
+      'receiver': receiver,
+      'amount': amount
+    })
+    previous_block = self.get_previous_block()
+    return previous_block['index'] + 1
 
 # Part 2 - Mining our Blockchain
 
@@ -106,6 +120,8 @@ def is_valid():
   else:
     response = {'message': 'Houston, we have a problem. The blockchain is not valid!'}
   return jsonify(response), 200
+
+# Part 3 - Decentralizing our Blockchain
 
 # Running the app
 app.run(host = '0.0.0.0', port = 5000)
